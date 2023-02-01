@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "aixplain-github-actions"
+version = "0.1.0"
+description = "Use ChatGPT to help in PR checks"
+authors = ["Rodrigo Farias Rezino <rodrigofrezino@gmail.com>"]
+readme = "README.md"
+packages = [{include = "aixplain_github_actions"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pygithub = "^1.57"
+openai = "^0.26.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
