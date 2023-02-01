@@ -4,7 +4,7 @@ from github.IssueComment import IssueComment
 from github.PaginatedList import PaginatedList
 
 
-class Github:
+class GithubPR:
     _repository_name: str
     _pr_number: int
     _github_token: str

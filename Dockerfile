@@ -8,4 +8,4 @@ FROM base as dev
 COPY entrypoint.sh /entrypoint.sh
 COPY . .
 
-ENTRYPOINT ["/entrypoint.sh"]
+#ENTRYPOINT ["/entrypoint.sh"]
