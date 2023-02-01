@@ -3,13 +3,13 @@ from typing import List
 import openai
 from github.File import File
 
-from src.github_pr import GithubPR
+from src.github import Github
 
 
-class ChatGPTPr:
-    _github_pr: GithubPR
+class ChatGPT:
+    _github_pr: Github
 
-    def __init__(self, github_pr: GithubPR, openai_token: str):
+    def __init__(self, github_pr: Github, openai_token: str):
         openai.api_key = openai_token
         self._github_pr = github_pr
 
