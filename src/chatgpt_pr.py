@@ -53,5 +53,5 @@ class ChatGPTPr:
             max_tokens=2048
         )
 
-        final_comment = f"[AIxplain Comment]\n{response['choices'][0]['text']}"
+        final_comment = f"[AIxplain Comment]\n[File: {file.filename}]\n{response['choices'][0]['text']}"
         return final_comment
