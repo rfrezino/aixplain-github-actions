@@ -13,7 +13,7 @@ args = parser.parse_args()
 github_pr = GithubPR(
     repository_name=os.getenv('GITHUB_REPOSITORY'),
     github_token=args.github_token,
-    pr_number=args.github_pr_id)
+    pr_number=int(args.github_pr_id))
 
 chatgpt = ChatGPT(
     github_pr=github_pr,
