@@ -65,8 +65,11 @@ class ChatGPT:
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
-        file_content = self._github_pr.get_content_for_file(file, commit)
-
+        try:
+            file_content = self._github_pr.get_content_for_file(file, commit)
+        except Exception as e:
+            print(f"Error while getting content for file: {e}")
+            return header.format(file=file.filename, response=f"Error while getting content for file: {e}")
 
         if file.filename.endswith(".py"):
             request = f"1. Describe what this file does \n2. Considering it's Python code, check if this file has any problems and if any suggest corrections:\n```{file_content}```"
