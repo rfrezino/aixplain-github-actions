@@ -26,9 +26,9 @@ class GithubPR:
             result.append(comment)
         return result
 
-    def remove_old_comments(self):
+    def remove_old_comments(self, identifier: str) -> None:
         for comment in self.get_comments():
-            if "[AIxplain Comment]" in comment.body:
+            if identifier in comment.body:
                 comment.delete()
 
     def get_pr_commits(self) -> List[Commit]:

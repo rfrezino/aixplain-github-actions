@@ -15,6 +15,7 @@ class LatestFile:
 
 
 class ChatGPT:
+    COMMENT_HEADER = "### AIxplain Comment"
     _github_pr: GithubPR
 
     def __init__(self, github_pr: GithubPR, openai_token: str):
@@ -23,7 +24,7 @@ class ChatGPT:
 
     def execute(self):
         files = self._get_latest_file_version_from_commits()
-        self._github_pr.remove_old_comments()
+        self._github_pr.remove_old_comments(self.COMMENT_HEADER)
         comments = self._generate_comments(files)
         self._github_pr.add_comments(comments)
 
@@ -61,7 +62,7 @@ class ChatGPT:
         return number_of_tokens
 
     def _generate_comment(self, latest_file: LatestFile) -> str:
-        header = "### AIxplain Comment\n#### File: _{file}_\n----\n{response}"
+        header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n----\n{{response}}"
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
