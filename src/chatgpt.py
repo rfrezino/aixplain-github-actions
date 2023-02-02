@@ -43,8 +43,25 @@ class ChatGPT:
 
         return list(files.values())
 
+    def _get_number_of_tokens_in_content(self, content: str) -> int:
+        MAX_TOKENS = 4097
+
+        # 1500 words in content = 2048 tokens
+        # where maximum is 4000 tokens, if content is longer than 4000 tokens, it will return -1
+        number_of_tokens = int(len(content.split(" ")) / 1500 * 2048)
+        if number_of_tokens > MAX_TOKENS:
+            return -1
+
+        # increase 10%
+        number_of_tokens = int(number_of_tokens * 1.40)
+        if number_of_tokens > MAX_TOKENS:
+            return MAX_TOKENS
+        return number_of_tokens
+
     def _generate_comment(self, latest_file: LatestFile) -> str:
+        header = "### AIxplain Comment\n#### File: _{file}_\n----\n{response}"
         file = latest_file.file
+        print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
         file_content = self._github_pr.get_content_for_file(file, commit)
 
@@ -58,12 +75,27 @@ class ChatGPT:
         else:
             request = f"1. Describe what this file does \n2. Check if this file has any problems and if any suggest corrections:\n```{file_content}```"
 
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=request,
-            temperature=0.6,
-            max_tokens=2048
-        )
+        request = f'{request} \n If possible put your answer in markdown format.'
+        tokens = self._get_number_of_tokens_in_content(request)
+        if tokens == -1:
+            print(f"File is too long to generate a comment: {file.filename}")
+            return header.format(file=file.filename, response=f"File is too long to generate a comment.")
 
-        final_comment = f"[AIxplain Comment]\n[File: {file.filename}]\n{response['choices'][0]['text']}"
+        try:
+            response = openai.Completion.create(
+                engine="text-davinci-003",
+                prompt=request,
+                temperature=0.6,
+                max_tokens=tokens,
+            )
+        except Exception as e:
+            if 'maximum context length' in str(e):
+                print(f"File is too long to generate a comment: {file.filename}")
+                return header.format(file=file.filename, response=f"File is too long to generate a comment.")
+            else:
+                print(f"Error while generating information: {e}")
+                return header.format(file=file.filename, response=f"Error while generating information: {e}")
+
+        final_comment = header.format(file=file.filename, response=response['choices'][0]['text'])
+        print(f"Generated comment for file: {file.filename}")
         return final_comment
