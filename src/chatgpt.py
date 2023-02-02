@@ -30,6 +30,8 @@ class ChatGPT:
     def _generate_comments(self, files: List[LatestFile]) -> List[str]:
         comments = []
         for file in files:
+            if file.file.status == "removed":
+                continue
             comments.append(self._generate_comment(file))
         return comments
 
@@ -64,6 +66,7 @@ class ChatGPT:
         print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
         file_content = self._github_pr.get_content_for_file(file, commit)
+
 
         if file.filename.endswith(".py"):
             request = f"1. Describe what this file does \n2. Considering it's Python code, check if this file has any problems and if any suggest corrections:\n```{file_content}```"
