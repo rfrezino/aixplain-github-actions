@@ -1,3 +1,4 @@
+import fnmatch
 from dataclasses import dataclass
 from typing import List
 
@@ -17,9 +18,14 @@ class LatestFile:
 
 class ChatGPT:
     COMMENT_HEADER = "### AIxplain Comment"
+    _ignore_files_with_content: str
+    _ignore_files_in_paths: List[str]
     _github_pr: GithubPR
 
-    def __init__(self, github_pr: GithubPR, openai_token: str):
+    def __init__(self, github_pr: GithubPR, openai_token: str, ignore_files_with_content: str,
+                 ignore_files_in_paths: List[str]):
+        self._ignore_files_with_content = ignore_files_with_content
+        self._ignore_files_in_paths = ignore_files_in_paths
         openai.api_key = openai_token
         self._github_pr = github_pr
 
@@ -121,7 +127,9 @@ class ChatGPT:
         for file in files:
             if file.file.status == "removed":
                 continue
-            comments.append(self._generate_comment(file))
+            comment = self._generate_comment(file)
+            if comment != "":
+                comments.append(comment)
         return comments
 
     def _get_latest_file_version_from_commits(self) -> List[LatestFile]:
@@ -134,7 +142,8 @@ class ChatGPT:
 
         return list(files.values())
 
-    def _get_number_of_tokens_in_content(self, content: str) -> int:
+    @staticmethod
+    def _get_number_of_tokens_in_content(content: str) -> int:
         MAX_TOKENS = 4097
 
         # 1500 words in content = 2048 tokens
@@ -150,12 +159,20 @@ class ChatGPT:
         return number_of_tokens
 
     def _generate_comment(self, latest_file: LatestFile) -> str:
+        if any([fnmatch.fnmatch(latest_file.file.filename, path) for path in self._ignore_files_in_paths]):
+            print(f'{latest_file.file.filename} is under an ignored path, skipping it.')
+            return ""
+
         header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n#### SHA: _{{sha}}_\n----\n{{response}}"
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
         try:
             file_content = self._github_pr.get_content_for_file(file, commit)
+
+            if self._ignore_files_with_content in file_content:
+                print(f"File {file.filename} is ignored, skipping it")
+                return ""
         except Exception as e:
             print(f"Error while getting content for file: {e}")
             return header.format(file=file.filename, sha=file.sha,
