@@ -17,7 +17,7 @@ def execute(github_repository: str, github_token: str, pr_number: int, openai_to
         github_pr=github_pr,
         openai_token=openai_token,
         ignore_files_with_content=ignore_files_with_content,
-        ignore_files_in_path=ignore_files_in_path.split(';')
+        ignore_files_in_paths=ignore_files_in_path.split(';')
     )
 
     chatgpt.execute()

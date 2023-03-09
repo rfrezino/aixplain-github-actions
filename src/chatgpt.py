@@ -88,7 +88,7 @@ class ChatGPT:
 
             # if file changed sha, delete the comment
             for file in files:
-                if file.file.filename == comment_file_name and file.commit.sha != comment_file_sha:
+                if file.file.filename == comment_file_name and file.file.sha != comment_file_sha:
                     print(f"{comment_file_name}: File content changed, deleting comment")
                     deprecated_comments.append(comment)
                     break
@@ -170,8 +170,8 @@ class ChatGPT:
         try:
             file_content = self._github_pr.get_content_for_file(file, commit)
 
-            if self._ignore_files_with_content in file_content:
-                print(f"File {file.filename} is ignored, skipping it")
+            if self._ignore_files_with_content is not None and self._ignore_files_with_content != "" and self._ignore_files_with_content in file_content:
+                print(f"{file.filename}: File content contains {self._ignore_files_with_content}, skipping it")
                 return ""
         except Exception as e:
             print(f"Error while getting content for file: {e}")
