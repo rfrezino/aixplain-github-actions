@@ -11,7 +11,7 @@ def execute(
     pr_number: int,
     openai_token: Optional[str],
     google_gemini_token: Optional[str],
-    ignore_files_with_content: List[str],
+    ignore_files_with_content: str,
     ignore_files_in_path: str,
 ):
     if openai_token is None and google_gemini_token is None:
@@ -29,7 +29,7 @@ def execute(
         chatgpt = ChatGPT(
             github_pr=github_pr,
             openai_token=openai_token,
-            ignore_files_with_content=ignore_files_with_content,
+            ignore_files_with_content=ignore_files_with_content.split(";"),
             ignore_files_in_paths=ignore_files_in_path.split(";"),
         )
         chatgpt.execute()
@@ -38,7 +38,7 @@ def execute(
         google_gemini = GoogleGemini(
             github_pr=github_pr,
             google_gemini_token=google_gemini_token,
-            ignore_files_with_content=ignore_files_with_content,
+            ignore_files_with_content=ignore_files_with_content.split(";"),
             ignore_files_in_paths=ignore_files_in_path.split(";"),
         )
 
