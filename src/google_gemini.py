@@ -37,7 +37,7 @@ class GoogleGemini(AiAssistent):
                 for ignore_content in self._ignore_files_with_content:
                     if ignore_content in file_content:
                         print(
-                            f"{file.filename}: File content contains {ignore_content}, skipping it"
+                            f"{file.filename}: File content contains {ignore_content}, skipping it. Filter: {self._ignore_files_with_content}"
                         )
                         return ""
         except Exception as e:
