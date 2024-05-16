@@ -14,8 +14,8 @@ jobs:
         with:
           credentials_json: '${{ secrets.GCP_CREDENTIALS_JSON }}'
 
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v2'
+#      - name: 'Set up Cloud SDK'
+#        uses: 'google-github-actions/setup-gcloud@v2'
 
       - name: Check PR
         uses: rfrezino/aixplain-github-actions@0.0.19
