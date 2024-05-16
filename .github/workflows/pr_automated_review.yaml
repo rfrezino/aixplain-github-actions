@@ -9,18 +9,13 @@ jobs:
     runs-on: ubuntu-latest
     name: AIxplain PR Context Helper
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@master
+      - id: 'auth service account 2'
+        uses: 'google-github-actions/auth@v2'
         with:
-          version: 'latest'
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          service_account_key: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+          credentials_json: '${{ secrets.GCP_CREDENTIALS_JSON }}'
 
-      - name: Authenticate to Google Cloud
-        run: gcloud auth activate-service-account --key-file=${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
 
       - name: Check PR
         uses: rfrezino/aixplain-github-actions@0.0.17
