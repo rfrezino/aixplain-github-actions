@@ -1,6 +1,10 @@
 name: 'AIxplain'
 description: 'Use ChatGPT to explain and suggest changes on your PR code'
 inputs:
+  google_api_key:
+    description: 'Google API Key'
+    required: true
+    default: ''
   openai_api_key:
     description: 'OpenAI API Key'
     required: true
@@ -20,3 +24,4 @@ runs:
     - ${{ inputs.openai_api_key }}
     - ${{ inputs.github_token }}
     - ${{ inputs.github_pr_id }}
+    - ${{ inputs.google_api_key }}
