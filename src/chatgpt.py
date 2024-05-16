@@ -25,16 +25,7 @@ class ChatGPT(AiAssistent):
         )
         openai.api_key = openai_token
 
-    def _generate_comment(self, latest_file: LatestFile) -> str:
-        if any(
-            [
-                fnmatch.fnmatch(latest_file.file.filename, path)
-                for path in self._ignore_files_in_paths
-            ]
-        ):
-            print(f"{latest_file.file.filename} is under an ignored path, skipping it.")
-            return ""
-
+    def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
         header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n#### SHA: _{{sha}}_\n----\n{{response}}"
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
