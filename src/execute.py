@@ -25,6 +25,7 @@ def execute(
     )
 
     if openai_token is not None and openai_token != "":
+        print("Using ChatGPT")
         chatgpt = ChatGPT(
             github_pr=github_pr,
             openai_token=openai_token,
@@ -33,6 +34,7 @@ def execute(
         )
         chatgpt.execute()
     else:
+        print("Using Google Gemini")
         google_gemini = GoogleGemini(
             github_pr=github_pr,
             google_gemini_token=google_gemini_token,

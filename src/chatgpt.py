@@ -25,32 +25,21 @@ class ChatGPT(AiAssistent):
         )
         openai.api_key = openai_token
 
-    def _generate_comment(self, latest_file: LatestFile) -> str:
-        if any(
-            [
-                fnmatch.fnmatch(latest_file.file.filename, path)
-                for path in self._ignore_files_in_paths
-            ]
-        ):
-            print(f"{latest_file.file.filename} is under an ignored path, skipping it.")
-            return ""
-
-        header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n#### SHA: _{{sha}}_\n----\n{{response}}"
+    def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
+        header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
         try:
             file_content = self._github_pr.get_content_for_file(file, commit)
 
-            if (
-                self._ignore_files_with_content is not None
-                and self._ignore_files_with_content != ""
-                and self._ignore_files_with_content in file_content
-            ):
-                print(
-                    f"{file.filename}: File content contains {self._ignore_files_with_content}, skipping it"
-                )
-                return ""
+            if self._ignore_files_with_content:
+                for ignore_content in self._ignore_files_with_content:
+                    if ignore_content in file_content:
+                        print(
+                            f"{file.filename}: File content contains {ignore_content}, skipping it"
+                        )
+                        return ""
         except Exception as e:
             print(f"Error while getting content for file: {e}")
             return header.format(
@@ -59,18 +48,19 @@ class ChatGPT(AiAssistent):
                 response=f"Error while getting content for file: {e}",
             )
 
-        if file.filename.endswith(".py"):
-            content = "You are a Python Enginner and you are reviewing a pull request. You reviews needs to: 1. Describe what this file does; 2. Check if the code has any problem or points for improvement, and if any, demonstrate how to improve or fix it;"
-        elif file.filename.endswith(".md"):
-            content = "You are a Technical Writer and you are reviewing documentation. You reviews needs to: Check if the text is clear, check for typos and other problems and if you find anything give suggestions to improve it If possible add examples based on the code."
-        elif "." in file.filename:
-            file_suffix = file.filename.split(".")[-1]
-            content = f"You are checking a file with the type {file_suffix}, based in the recommendations for this file type you need to: 1. Describe what this file does; 2. Check if there is any problems in the code and if any suggest corrections If possible add examples based on its content."
-        else:
-            content = "1. Describe what this file does \n2. Check if this file has any problems and if any suggest corrections:"
+        ai_input = f"""
+This is the whole file content:
+```
+{file_content}
+```
 
-        content = f"{content} \n If possible put your answer in markdown format."
-        tokens = self._get_number_of_tokens_in_content(file_content)
+And these are the changes you need to review, they are in git diff format:
+```
+{file.patch}
+```
+"""
+
+        tokens = self._get_number_of_tokens_in_content(ai_input)
         if tokens == -1:
             print(f"File is too long to generate a comment: {file.filename}")
             return header.format(
@@ -83,8 +73,8 @@ class ChatGPT(AiAssistent):
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": content},
-                    {"role": "user", "content": file_content},
+                    {"role": "system", "content": instructions},
+                    {"role": "user", "content": ai_input},
                 ],
             )
 
