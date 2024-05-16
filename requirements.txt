@@ -1,3 +1,4 @@
 # Github actions does not support poetry, so for final deployment we need to use pipenv, I'm using poetry just for local development
 openai
 PyGithub
+vertexai

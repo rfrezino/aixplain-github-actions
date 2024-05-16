@@ -38,6 +38,13 @@ class GithubPR:
             result.append(commit)
         return result
 
+    def get_files(self) -> List[File]:
+        files = self._repository.get_pull(self._pr_number).get_files()
+        result = []
+        for file in files:
+            result.append(file)
+        return result
+
     def add_comments(self, comments: list):
         for comment in comments:
             self._repository.get_pull(self._pr_number).create_issue_comment(comment)
