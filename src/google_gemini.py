@@ -26,9 +26,9 @@ class GoogleGemini(AiAssistent):
         self._google_gemini_token = google_gemini_token
 
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
+        print(f"Generating comment for file: {file.filename}")
         header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
         file = latest_file.file
-        print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
         try:
             file_content = self._github_pr.get_content_for_file(file, commit)
