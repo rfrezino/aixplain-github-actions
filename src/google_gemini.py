@@ -29,37 +29,7 @@ class GoogleGemini(AiAssistent):
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
-        commit = latest_file.commit
-        try:
-            file_content = self._github_pr.get_content_for_file(file, commit)
-
-            if self._ignore_files_with_content:
-                for ignore_content in self._ignore_files_with_content:
-                    if ignore_content in file_content:
-                        print(
-                            f"{file.filename}: File content contains {ignore_content}, skipping it. Filter: {self._ignore_files_with_content}"
-                        )
-                        return ""
-        except Exception as e:
-            print(f"Error while getting content for file: {e}")
-            return header.format(
-                file=file.filename,
-                sha=file.sha,
-                response=f"Error while getting content for file: {e}",
-            )
-
-        ai_input = f"""
-This is the whole file content:
-```
-{file_content}
-```
-
-And this is the Git Diff, that you need review:
-```
-{file.patch}
-```
-"""
-        ai_input = file_content
+        ai_input = latest_file.get_file_content(self._github_pr)
 
         tokens = self._get_number_of_tokens_in_content(ai_input)
         if tokens == -1:

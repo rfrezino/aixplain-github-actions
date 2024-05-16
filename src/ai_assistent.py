@@ -2,7 +2,7 @@ import fnmatch
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from github.IssueComment import IssueComment
 
@@ -15,6 +15,12 @@ from github.File import File
 class LatestFile:
     file: File
     commit: Commit
+    _content: Optional[str] = None
+
+    def get_file_content(self, gr_pr: GithubPR) -> str:
+        if self._content is None:
+            self._content = gr_pr.get_content_for_file(self.file, self.commit)
+        return self._content
 
 
 @dataclass
@@ -55,14 +61,15 @@ These are the guidelines:
 5. If you found no problems, reply with "All Good Here!".
 6. Don't be verbose, write what is necessary.
 7. Don't print the whole code again, just the parts specified in the comments.
-8. Just comment about the code in Git Diff, and not about the whole file.
-9. Respond in a constructive way.
+8. Respond in a constructive way.
 
 Example for a good comment:
 1. Put the comments in a list
 2. Explain what can be improved.
 3. Show just the part of the code that needs to be improved.
 4. Provide a suggestion to fix it with an example.
+
+Some specifics for this file type: {specifics} 
 
 This is an input example:
 
@@ -81,25 +88,10 @@ parameters:
 - name: ci_docker_compose_coverage_targ
   type: string
   default: 'coverage'
-  
-This is what you need to improve:
-
---- a/file.yaml
-+++ b/file.yaml
-@@ -6,4 +6,8 @@ parameters:
-  - name: coverage_target
-   type: string
-  - name: ci_docker_compose_file
--  type: string
-+  type: string
-+- name: ci_docker_compose_coverage_targ
-+  type: string
-+  default: 'coverage'
-
 ```
 
 This is a result example:
-``` 
+
 1. **YAML indentation consistency**
    ```yaml
    - name: dev_image_tag
@@ -116,9 +108,6 @@ This is a result example:
    ```
    - Tha variable `ci_docker_compose_coverage_targ` can be more explicit to do not cause confusion.
    - **Suggestion:** Change the variable name to `ci_docker_compose_coverage_target` for better readability.
-```
-
-Some specifics for this file type: {specifics} 
 """
 
         py_instructions = FileInstructions(
@@ -151,7 +140,7 @@ Some specifics for this file type: {specifics}
             default_instructions,
         ]
 
-        appended_instructions = "\n This is the file name {file_name}. Put the response in a single file in plain markdown format."
+        appended_instructions = "\n This is the file name {file_name}. Put the response in a single file in plain Markdown Github format."
         for instruction in result:
             instruction.instructions = (
                 f"{instruction.instructions} {appended_instructions}"
@@ -163,6 +152,16 @@ Some specifics for this file type: {specifics}
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
         pass
 
+    def _should_file_be_ignored_due_to_content(self, file: LatestFile) -> bool:
+        if self._ignore_files_with_content:
+            for ignore_content in self._ignore_files_with_content:
+                if ignore_content in file.get_file_content(self._github_pr):
+                    print(
+                        f"{file.file.filename}: File content contains {ignore_content}, skipping it. Filter: {self._ignore_files_with_content}"
+                    )
+                    return True
+        return False
+
     def execute(self):
         print("Getting PR information")
         pr_author = self._github_pr.get_pr_author_login()
@@ -172,6 +171,18 @@ Some specifics for this file type: {specifics}
 
         print("Getting all files from PR")
         all_files = self._get_latest_file_version_from_commits()
+        print("Filter files by their content")
+        all_files = [
+            file
+            for file in all_files
+            if not self._should_file_be_ignored_due_to_content(file)
+        ]
+        print("Filter files by their path")
+        all_files = [
+            file
+            for file in all_files
+            if not self._should_file_be_ignored_due_to_path(file.file.filename)
+        ]
         print("Getting all bot comments")
         all_bot_comments = self.get_all_bot_comments()
         print("Removing deprecated comments")
@@ -253,6 +264,7 @@ Some specifics for this file type: {specifics}
                 continue
 
             # if file changed sha, delete the comment
+            deleted = False
             for file in files:
                 if (
                     file.file.filename == comment_file_name
@@ -262,8 +274,10 @@ Some specifics for this file type: {specifics}
                         f"{comment_file_name}: File content changed, deleting comment"
                     )
                     deprecated_comments.append(comment)
+                    deleted = True
                     break
 
+            if not deleted:
                 remaining_comments.append(comment)
 
         for comment in deprecated_comments:
@@ -300,9 +314,6 @@ Some specifics for this file type: {specifics}
             if file.file.status == "removed":
                 continue
 
-            if self._should_file_be_ignored(file.file.filename):
-                continue
-
             instructions_text: str = next(
                 (
                     instruction.instructions
@@ -328,7 +339,7 @@ Some specifics for this file type: {specifics}
                 comments.append(comment)
         return comments
 
-    def _should_file_be_ignored(self, file_name: str) -> bool:
+    def _should_file_be_ignored_due_to_path(self, file_name: str) -> bool:
         if any(
             [fnmatch.fnmatch(file_name, path) for path in self._ignore_files_in_paths]
         ):
