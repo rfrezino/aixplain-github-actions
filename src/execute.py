@@ -24,13 +24,20 @@ def execute(
         pr_number=pr_number,
     )
 
+    ignore_files_with_content_list = ignore_files_with_content.split(";")
+    ignore_files_with_content_list = [x.strip() for x in ignore_files_with_content_list if x.strip()]
+
+    ignore_files_in_path_list = ignore_files_in_path.split(";")
+    ignore_files_in_path_list = [x.strip() for x in ignore_files_in_path_list if x.strip()]
+
+
     if openai_token is not None and openai_token != "":
         print("Using ChatGPT")
         chatgpt = ChatGPT(
             github_pr=github_pr,
             openai_token=openai_token,
-            ignore_files_with_content=ignore_files_with_content.split(";"),
-            ignore_files_in_paths=ignore_files_in_path.split(";"),
+            ignore_files_with_content=ignore_files_with_content_list,
+            ignore_files_in_paths=ignore_files_in_path_list,
         )
         chatgpt.execute()
     else:
@@ -38,8 +45,8 @@ def execute(
         google_gemini = GoogleGemini(
             github_pr=github_pr,
             google_gemini_token=google_gemini_token,
-            ignore_files_with_content=ignore_files_with_content.split(";"),
-            ignore_files_in_paths=ignore_files_in_path.split(";"),
+            ignore_files_with_content=ignore_files_with_content_list,
+            ignore_files_in_paths=ignore_files_in_path_list,
         )
 
         google_gemini.execute()
