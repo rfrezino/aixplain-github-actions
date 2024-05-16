@@ -1,4 +1,3 @@
-import fnmatch
 from typing import List
 
 import vertexai
@@ -28,25 +27,16 @@ class GoogleGemini(AiAssistent):
         try:
             file_content = self._github_pr.get_content_for_file(file, commit)
 
-            if self._ignore_files_with_content is not None and self._ignore_files_with_content != "" and self._ignore_files_with_content in file_content:
-                print(f"{file.filename}: File content contains {self._ignore_files_with_content}, skipping it")
-                return ""
+            if self._ignore_files_with_content:
+                for ignore_content in self._ignore_files_with_content:
+                    if ignore_content in file_content:
+                        print(f"{file.filename}: File content contains {ignore_content}, skipping it")
+                        return ""
         except Exception as e:
             print(f"Error while getting content for file: {e}")
             return header.format(file=file.filename, sha=file.sha,
                                  response=f"Error while getting content for file: {e}")
 
-        if file.filename.endswith(".py"):
-            system_content = 'You are a Python Enginner and you are reviewing a pull request. You reviews needs to: 1. Describe what this file does; 2. Check if the code has any problem or points for improvement, and if any, demonstrate how to improve or fix it;'
-        elif file.filename.endswith(".md"):
-            system_content = 'You are a Technical Writer and you are reviewing documentation. You reviews needs to: Check if the text is clear, check for typos and other problems and if you find anything give suggestions to improve it If possible add examples based on the code.'
-        elif '.' in file.filename:
-            file_suffix = file.filename.split(".")[-1]
-            system_content = f'You are checking a file with the type {file_suffix}, based in the recommendations for this file type you need to: 1. Describe what this file does; 2. Check if there is any problems in the code and if any suggest corrections If possible add examples based on its content.'
-        else:
-            system_content = "1. Describe what this file does \n2. Check if this file has any problems and if any suggest corrections:"
-
-        system_content = f'{system_content} \n If possible put your answer in markdown format.'
         tokens = self._get_number_of_tokens_in_content(file_content)
         if tokens == -1:
             print(f"File is too long to generate a comment: {file.filename}")
@@ -68,7 +58,7 @@ class GoogleGemini(AiAssistent):
             vertexai.init(project="freshbooks-builds", location="us-central1")
             model = GenerativeModel(
                 "gemini-1.5-flash-preview-0514",
-                system_instruction=[system_content]
+                system_instruction=[instructions]
             )
             response: GenerationResponse = model.generate_content(
                 [file_content],
@@ -87,7 +77,7 @@ class GoogleGemini(AiAssistent):
                 return header.format(file=file.filename, sha=file.sha,
                                      response=f"Error while generating information: {e}")
 
-        comment = response.text
+        comment = response.text.strip()
 
         final_comment = header.format(file=file.filename, sha=file.sha, response=comment)
         print(f"Generated comment for file: {file.filename}")

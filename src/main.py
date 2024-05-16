@@ -1,5 +1,3 @@
-import argparse
-import os
 from typing import Optional, List
 
 from chatgpt import ChatGPT
@@ -34,6 +32,7 @@ def execute(github_repository: str, github_token: str, pr_number: int, openai_to
             ignore_files_with_content=ignore_files_with_content,
             ignore_files_in_paths=ignore_files_in_path.split(';')
         )
+
         google_gemini.execute()
 
 # parser = argparse.ArgumentParser()

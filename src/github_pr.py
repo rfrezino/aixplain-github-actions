@@ -51,3 +51,9 @@ class GithubPR:
 
     def get_content_for_file(self, file: File, commit: Commit) -> str:
         return self._repository.get_contents(file.filename, ref=commit.sha).decoded_content.decode("utf-8")
+
+    def get_pr_title(self) -> str:
+        return self._repository.get_pull(self._pr_number).title
+
+    def get_pr_author_login(self) -> str:
+        return self._repository.get_pull(self._pr_number).user.login

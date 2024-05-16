@@ -39,14 +39,67 @@ class AiAssistent(ABC):
 
     @staticmethod
     def _generate_file_instructions() -> List[FileInstructions]:
-        py_instructions = FileInstructions(file_match="*.py", instructions="You are a Python Enginner and you are reviewing a pull request. You reviews needs to: 1. Describe what this file does; 2. Check if the code has any problem or points for improvement, and if any, demonstrate how to improve or fix it;")
-        md_instructions = FileInstructions(file_match="*.md", instructions="You are a Technical Writer and you are reviewing documentation. You reviews needs to: Check if the text is clear, check for typos and other problems and if you find anything give suggestions to improve it If possible add examples based on the code.")
-        file_with_extension_instructions = FileInstructions(file_match="*.*", instructions="You are checking a file with the type {file_suffix}, based in the recommendations for this file type you need to: 1. Describe what this file does; 2. Check if there is any problems in the code and if any suggest corrections If possible add examples based on its content.")
-        default_instructions = FileInstructions(file_match="*", instructions="1. Describe what this file does \n2. Check if this file has any problems and if any suggest corrections.")
+        header = """You are a senior python developer and you are reviewing a pull request.
+These are the guidelines:
+1. You need to add comments for content that is not clear or has problems.
+2. You need to be succinct and clear in your comments.
+3. If you find any problem, you must provide a solution or suggestion.
+4. If possible, add examples based on the code.
+5. If you found no problems, reply with "All Good Here!".
+6. Don't be verbose, write what is necessary.
+7. Don't print the whole code again, just the parts specified in the comments.
+
+Example for a good comment:
+1. Put the comments in a list
+2. Explain what can be improved.
+3. Show just the part of the code that needs to be improved.
+4.Provide a suggestion to fix it.
+
+```code
+parameters:
+ - name: dev_image_tag
+  type: string
+ - name: image
+  type: string
+ - name: coverage_target
+  type: string
+ - name: ci_docker_compose_file
+  type: string
+ - name: ci_docker_compose_coverage_target
+  type: string
+  default: 'coverage'
+```
+
+``` Result
+1. **YAML indentation consistency**
+   ```yaml
+   - name: dev_image_tag
+     type: string
+   ```
+   - The indentation of elements under `parameters` is inconsistent. YAML files are sensitive to indentation as it determines the structure of the data.
+   - **Suggestion:** Ensure consistent indentation across all elements for clarity and to avoid parsing errors.
+
+2. **Default value outside of the standard structure**
+   ```yaml
+   - name: ci_docker_compose_coverage_target
+     type: string
+     default: 'coverage'
+   ```
+   - The `default` value for `ci_docker_compose_coverage_target` is provided directly within the list of parameters, which is typically fine. However, ensure this matches the intended use within your scripts and pipeline requirements.
+   - **Suggestion:** If `ci_docker_compose_coverage_target` is not expected to frequently change, consider keeping this default value. Otherwise, make it more visible or configurable as needed.
+```
+
+Some specifics for this file type: {specifics} 
+        """
+
+        py_instructions = FileInstructions(file_match="*.py", instructions=header.format(specifics="You are reviewing a Python file."))
+        md_instructions = FileInstructions(file_match="*.md", instructions=header.format(specifics= "heck if the text is clear, check for typos and other problems and if you find anything give suggestions to improve"))
+        file_with_extension_instructions = FileInstructions(file_match="*.*", instructions=header.format(specifics="You are checking a file with the type {file_suffix}, you know the recommendations for this file."))
+        default_instructions = FileInstructions(file_match="*", instructions=header.format(specifics="Based on the type of this file, check it based on the best practices."))
 
         result = [py_instructions, md_instructions, file_with_extension_instructions, default_instructions]
 
-        appended_instructions = '\n If possible put your answer in markdown format.'
+        appended_instructions = '\n This is the file name {file_name}. Put the response in plain markdown format.'
         for instruction in result:
             instruction.instructions = f'{instruction.instructions} {appended_instructions}'
 
@@ -57,6 +110,12 @@ class AiAssistent(ABC):
         pass
 
     def execute(self):
+        print("Getting PR information")
+        pr_author = self._github_pr.get_pr_author_login()
+        if "dependabot" in pr_author:
+            print("Dependabot PR, skipping")
+            exit(0)
+
         print("Getting all files from PR")
         all_files = self._get_latest_file_version_from_commits()
         print("Getting all bot comments")
@@ -70,23 +129,16 @@ class AiAssistent(ABC):
         self._github_pr.add_comments(comments)
 
     def _get_latest_file_version_from_commits(self) -> List[LatestFile]:
-        files_in_pr = self._github_pr.get_files()
-        latest_files = {}
-        for file in files_in_pr:
-            file.sha
-            if file.filename not in latest_files:
-                latest_files[file.filename] = LatestFile(file=file, commit=file)
-            elif file.commit.commit.author.date > latest_files[file.filename].commit.commit.author.date:
-                latest_files[file.filename] = LatestFile(file=file, commit=file.commit)
+        files_in_pr = [f.filename for f in self._github_pr.get_files()]
+        commits = self._github_pr.get_pr_commits()
+        files = {}
+        for commit in commits:
+            for file in commit.files:
+                if file.filename not in files_in_pr:
+                    continue
 
-
-
-        # commits = self._github_pr.get_pr_commits()
-        # files = {}
-        # for commit in commits:
-        #     for file in commit.files:
-        #         latest_file = LatestFile(file=file, commit=commit)
-        #         files[file.filename] = latest_file
+                latest_file = LatestFile(file=file, commit=commit)
+                files[file.filename] = latest_file
 
         return list(files.values())
 
@@ -180,15 +232,16 @@ class AiAssistent(ABC):
             if self._should_file_be_ignored(file.file.filename):
                 continue
 
-            instructions = next((instruction.instructions for instruction in self._file_instructions if
-                                 fnmatch.fnmatch(file.file.filename, instruction.file_match)), None)
-            if instructions is None:
+            instructions_text: str = next((instruction.instructions for instruction in self._file_instructions if
+                                 fnmatch.fnmatch(file.file.filename, instruction.file_match)), "")
+            if instructions_text is "":
                 print(f"No instructions found for file {file.file.filename}")
                 continue
 
-            instructions.replace("{file_suffix}", Path(file.file.filename).suffix)
+            instructions_text = instructions_text.replace("{file_suffix}", Path(file.file.filename).suffix)
+            instructions_text = instructions_text.replace("{file_name}", file.file.filename)
 
-            comment = self._generate_comment(file, instructions)
+            comment = self._generate_comment(file, instructions_text)
             if comment != "":
                 comments.append(comment)
         return comments
