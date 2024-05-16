@@ -26,9 +26,9 @@ class GoogleGemini(AiAssistent):
         self._google_gemini_token = google_gemini_token
 
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
-        header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
+        header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
         commit = latest_file.commit
         try:
             file_content = self._github_pr.get_content_for_file(file, commit)
@@ -54,7 +54,7 @@ This is the whole file content:
 {file_content}
 ```
 
-And these are the changes you need to review, they are in git diff format:
+And this is the Git Diff, that you need review:
 ```
 {file.patch}
 ```
@@ -84,10 +84,10 @@ And these are the changes you need to review, they are in git diff format:
             }
             vertexai.init(project="freshbooks-builds", location="us-central1")
             model = GenerativeModel(
-                "gemini-1.5-flash-preview-0514", system_instruction=[instructions]
+                "gemini-1.5-flash-preview-0514", system_instruction=instructions
             )
             response: GenerationResponse = model.generate_content(
-                [ai_input],
+                contents=ai_input,
                 generation_config=generation_config,
                 safety_settings=safety_settings,
                 stream=False,
