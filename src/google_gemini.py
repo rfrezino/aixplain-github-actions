@@ -4,8 +4,8 @@ import vertexai
 from vertexai.generative_models import GenerativeModel, GenerationResponse
 import vertexai.preview.generative_models as generative_models
 
-from src.ai_assistent import AiAssistent, LatestFile
-from src.github_pr import GithubPR
+from ai_assistent import AiAssistent, LatestFile
+from github_pr import GithubPR
 
 
 class GoogleGemini(AiAssistent):
