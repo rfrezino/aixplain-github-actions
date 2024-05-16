@@ -151,7 +151,7 @@ Some specifics for this file type: {specifics}
             default_instructions,
         ]
 
-        appended_instructions = "\n This is the file name {file_name}. Put the response in plain markdown format."
+        appended_instructions = "\n This is the file name {file_name}. Put the response in a single file in plain markdown format."
         for instruction in result:
             instruction.instructions = (
                 f"{instruction.instructions} {appended_instructions}"
