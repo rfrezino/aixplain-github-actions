@@ -35,4 +35,4 @@ class TestAiAssistent:
             ],
         )
 
-        assert client._should_file_be_ignored(file) == result
+        assert client._should_file_be_ignored_due_to_path(file) == result
