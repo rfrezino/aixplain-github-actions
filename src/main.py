@@ -8,7 +8,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--openai_api_key", help="Your OpenAI API Key", default="")
 parser.add_argument("--github_token", help="Your Github Token", default="")
 parser.add_argument("--github_pr_id", help="Your Github PR ID", default=1)
-parser.add_argument("--google_gemini_token", help="Your Google Gemini Token", default="")
+parser.add_argument(
+    "--google_gemini_token", help="Your Google Gemini Token", default=""
+)
 parser.add_argument(
     "--ignore_files_with_content",
     help="If file has this content on its body, ignore it.",
