@@ -6,7 +6,7 @@ from typing import List
 
 from github.IssueComment import IssueComment
 
-from src.github_pr import GithubPR
+from github_pr import GithubPR
 from github.Commit import Commit
 from github.File import File
 

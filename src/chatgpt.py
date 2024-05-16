@@ -4,7 +4,7 @@ from typing import List
 import openai
 
 from github_pr import GithubPR
-from src.ai_assistent import AiAssistent, LatestFile
+from ai_assistent import AiAssistent, LatestFile
 
 
 class ChatGPT(AiAssistent):
