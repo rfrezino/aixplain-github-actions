@@ -16,7 +16,4 @@ jobs:
       with:
         token: ${{ secrets.AUTOMERGE_TOKEN }}
         repo: ${{ github.repository }}
-        title: ${{ github.event.pull_request.title }}
-        branch: "main"
-        prerelease: false
-        label: true
+        pr_title: ${{ github.event.pull_request.title }}

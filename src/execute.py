@@ -6,13 +6,13 @@ from google_gemini import GoogleGemini
 
 
 def execute(
-    github_repository: str,
-    github_token: str,
-    pr_number: int,
-    openai_token: Optional[str],
-    google_gemini_token: Optional[str],
-    ignore_files_with_content: str,
-    ignore_files_in_path: str,
+        github_repository: str,
+        github_token: str,
+        pr_number: int,
+        openai_token: Optional[str],
+        google_gemini_token: Optional[str],
+        ignore_files_with_content: str,
+        ignore_files_in_path: str,
 ):
     if openai_token is None and google_gemini_token is None:
         raise ValueError("You need to provide at least one AI Token")
@@ -29,7 +29,6 @@ def execute(
 
     ignore_files_in_path_list = ignore_files_in_path.split(";")
     ignore_files_in_path_list = [x.strip() for x in ignore_files_in_path_list if x.strip()]
-
 
     if openai_token is not None and openai_token != "":
         print("Using ChatGPT")
