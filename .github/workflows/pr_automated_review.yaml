@@ -18,7 +18,7 @@ jobs:
 #        uses: 'google-github-actions/setup-gcloud@v2'
 
       - name: Check PR
-        uses: rfrezino/aixplain-github-actions@0.0.23
+        uses: rfrezino/aixplain-github-actions@0.0.24
         with:
           openai_api_key: ""
           github_token: ${{secrets.AUTOMERGE_TOKEN}}
