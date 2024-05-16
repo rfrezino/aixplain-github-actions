@@ -24,7 +24,7 @@ def execute(
         pr_number=pr_number,
     )
 
-    if openai_token is not None:
+    if openai_token is not None and openai_token != "":
         chatgpt = ChatGPT(
             github_pr=github_pr,
             openai_token=openai_token,
