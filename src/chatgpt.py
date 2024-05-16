@@ -26,6 +26,7 @@ class ChatGPT(AiAssistent):
         openai.api_key = openai_token
 
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
+        # This header will be used to generate the comment
         header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")

@@ -15,3 +15,4 @@ jobs:
       uses: bfren/create-release@v1
       with:
         token: ${{ secrets.AUTOMERGE_TOKEN }}
+        repo: ${{ github.repository }}
