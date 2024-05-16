@@ -1,22 +1,31 @@
 name: 'AIxplain'
 description: 'Use ChatGPT to explain and suggest changes on your PR code'
 inputs:
-  google_api_key:
-    description: 'Google API Key'
-    required: true
-    default: ''
   openai_api_key:
     description: 'OpenAI API Key'
-    required: true
+    required: false
     default: ''
   github_token:
-    description: 'Github API Key'
+    description: 'Github Token'
     required: true
     default: ''
   github_pr_id:
     description: 'Github PR ID'
     required: true
     default: ''
+  google_gemini_token:
+    description: 'Google Gemini Token'
+    required: false
+    default: ''
+  ignore_files_with_content:
+    description: 'Ignore files with content'
+    required: false
+    default: ''
+  ignore_files_in_paths:
+    description: 'Ignore files in paths'
+    required: false
+    default: ''
+
 runs:
   using: 'docker'
   image: 'Dockerfile'
@@ -24,4 +33,6 @@ runs:
     - ${{ inputs.openai_api_key }}
     - ${{ inputs.github_token }}
     - ${{ inputs.github_pr_id }}
-    - ${{ inputs.google_api_key }}
+    - ${{ inputs.google_gemini_token }}
+    - ${{ inputs.ignore_files_with_content }}
+    - ${{ inputs.ignore_files_in_paths }}
