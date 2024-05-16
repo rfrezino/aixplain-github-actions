@@ -264,7 +264,7 @@ Some specifics for this file type: {specifics}
                     deprecated_comments.append(comment)
                     break
 
-            remaining_comments.append(comment)
+                remaining_comments.append(comment)
 
         for comment in deprecated_comments:
             comment.delete()
