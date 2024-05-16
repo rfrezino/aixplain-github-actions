@@ -59,6 +59,7 @@ And this is the Git Diff, that you need review:
 {file.patch}
 ```
 """
+        ai_input = file_content
 
         tokens = self._get_number_of_tokens_in_content(ai_input)
         if tokens == -1:
