@@ -25,6 +25,10 @@ inputs:
     description: 'Ignore files in paths'
     required: false
     default: ''
+  instructions:
+    description: 'Instructions'
+    required: false
+    default: ''
 
 runs:
   using: 'docker'
