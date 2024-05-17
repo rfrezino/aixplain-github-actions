@@ -37,6 +37,7 @@ class AiAssistent(ABC):
     _ignore_files_with_content: List[str]
     _ignore_files_in_paths: List[str]
     _file_instructions: List[FileInstructions]
+    _instructions: List[str]
     MAX_TOKENS = 0
 
     def __init__(
@@ -44,38 +45,41 @@ class AiAssistent(ABC):
         github_pr: GithubPR,
         ignore_files_with_content: List[str],
         ignore_files_in_paths: List[str],
+        instructions: List[str],
     ) -> None:
         self._github_pr = github_pr
         self._ignore_files_with_content = ignore_files_with_content
         self._ignore_files_in_paths = ignore_files_in_paths
+        self._instructions = instructions
         self._file_instructions = self._generate_file_instructions()
 
-    @staticmethod
-    def _generate_file_instructions() -> List[FileInstructions]:
-        header = """You are a senior python developer and you are reviewing a pull request.
-These are the guidelines:
-1. You need to add comments for content that is not clear or has problems.
-2. You need to be succinct and clear in your comments.
-3. If you find any problem, you must provide a solution or suggestion.
-4. If possible, add examples based on the code.
-5. If you found no problems, reply with "All Good Here!".
-6. Don't be verbose, write what is necessary.
-7. Don't print the whole code again, just the parts specified in the comments.
-8. Respond in a constructive way.
+    def _generate_file_instructions(self) -> List[FileInstructions]:
+        header = """You are a senior Python developer reviewing a pull request. Follow these guidelines:
 
-Example for a good comment:
-1. Put the comments in a list
+1. Add comments for content that is unclear or problematic.
+2. Be succinct and clear in your comments.
+3. If you find any problem, provide a solution or suggestion.
+4. When possible, add examples based on the code.
+5. If you find no problems, reply with "All Good Here!".
+6. Avoid verbosity; write only what is necessary.
+7. Do not include the whole code; only the relevant parts in your comments.
+8. Respond constructively.
+
+{specific_instructions}
+
+### Example of a Good Comment:
+
+1. List the comments.
 2. Explain what can be improved.
-3. Show just the part of the code that needs to be improved.
-4. Provide a suggestion to fix it with an example.
+3. Show the specific part of the code that needs improvement.
+4. Provide a suggestion to fix it, including an example.
 
-Some specifics for this file type: {specifics} 
+### Specific Guidelines for this File Type: 
+{specifics}
 
-This is an input example:
+### Input Example:
 
-```code
-This is the whole code: 
-
+```yaml
 parameters:
  - name: dev_image_tag
   type: string
@@ -90,9 +94,9 @@ parameters:
   default: 'coverage'
 ```
 
-This is a result example:
+### Result Example:
 
-1. **YAML indentation consistency**
+1. **YAML Indentation Consistency**
    ```yaml
    - name: dev_image_tag
      type: string
@@ -100,36 +104,48 @@ This is a result example:
    - The indentation of elements under `parameters` is inconsistent. YAML files are sensitive to indentation as it determines the structure of the data.
    - **Suggestion:** Ensure consistent indentation across all elements for clarity and to avoid parsing errors.
 
-2. **The variable name can be explicit for redability**
+2. **Variable Name Readability**
    ```yaml
 - name: ci_docker_compose_coverage_targ
   type: string
   default: 'coverage'
    ```
-   - Tha variable `ci_docker_compose_coverage_targ` can be more explicit to do not cause confusion.
+   - The variable `ci_docker_compose_coverage_targ` could be more explicit to avoid confusion.
    - **Suggestion:** Change the variable name to `ci_docker_compose_coverage_target` for better readability.
+
 """
+        specific_instruction = ""
+        if self._instructions:
+            specific_instruction = "Specifics instructions for this file:\n"
+            for number, instruction in enumerate(self._instructions):
+                specific_instruction += f"{number + 1}. {instruction}\n"
 
         py_instructions = FileInstructions(
             file_match="*.py",
-            instructions=header.format(specifics="You are reviewing a Python file."),
+            instructions=header.format(
+                specifics="You are reviewing a Python file.",
+                specific_instructions=specific_instruction,
+            ),
         )
         md_instructions = FileInstructions(
             file_match="*.md",
             instructions=header.format(
-                specifics="heck if the text is clear, check for typos and other problems and if you find anything give suggestions to improve"
+                specifics="Check if the text is clear, check for typos and other problems and if you find anything give suggestions to improve",
+                specific_instructions=specific_instruction,
             ),
         )
         file_with_extension_instructions = FileInstructions(
             file_match="*.*",
             instructions=header.format(
-                specifics="You are checking a file with the type {file_suffix}, you know the recommendations for this file."
+                specifics="You are checking a file with the type {file_suffix}, you know the recommendations for this file.",
+                specific_instructions=specific_instruction,
             ),
         )
         default_instructions = FileInstructions(
             file_match="*",
             instructions=header.format(
-                specifics="Based on the type of this file, check it based on the best practices."
+                specifics="Based on the type of this file, check it based on the best practices.",
+                specific_instructions=specific_instruction,
             ),
         )
 

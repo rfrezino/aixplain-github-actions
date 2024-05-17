@@ -21,6 +21,11 @@ parser.add_argument(
     help='List of relative paths, split by ";" Example "*/test/;*/docs/"',
     default="",
 )
+parser.add_argument(
+    "--instructions",
+    help="Instructions for the model. List of instructions separated by ';'. Example: 'python code;generate comment'",
+    default="",
+)
 args = parser.parse_args()
 
 execute(
@@ -31,4 +36,5 @@ execute(
     google_gemini_token=args.google_gemini_token,
     ignore_files_with_content=args.ignore_files_with_content,
     ignore_files_in_path=args.ignore_files_in_paths,
+    instructions=args.instructions,
 )

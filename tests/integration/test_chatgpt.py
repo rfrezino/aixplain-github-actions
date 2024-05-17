@@ -19,6 +19,9 @@ class TestMain:
         ignore_files_in_path = (
             "*pyproject.toml;*requirements.txt;*Pipfile;*Pipfile.lock"
         )
+        instructions = (
+            "We don't use DocStrings; Don't tell me about unnecessary casts in Python;"
+        )
 
         execute(
             github_repository=freshbooks_repository,
@@ -28,4 +31,5 @@ class TestMain:
             google_gemini_token=google_token,
             ignore_files_with_content=ignore_files_with_content,
             ignore_files_in_path=ignore_files_in_path,
+            instructions=instructions,
         )

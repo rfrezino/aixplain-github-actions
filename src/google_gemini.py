@@ -17,11 +17,13 @@ class GoogleGemini(AiAssistent):
         ignore_files_with_content: List[str],
         ignore_files_in_paths: List[str],
         google_gemini_token: str,
+        instructions: List[str],
     ):
         super().__init__(
             github_pr=github_pr,
             ignore_files_with_content=ignore_files_with_content,
             ignore_files_in_paths=ignore_files_in_paths,
+            instructions=instructions,
         )
         self._google_gemini_token = google_gemini_token
 
@@ -30,6 +32,18 @@ class GoogleGemini(AiAssistent):
         print(f"Generating comment for file: {file.filename}")
         header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
         ai_input = latest_file.get_file_content(self._github_pr)
+
+        changes = file.patch
+        ai_input = f"""This is the whole file:
+```
+{ai_input}
+```
+
+These are the changes, based on git diff:
+```
+{changes}
+```
+"""
 
         tokens = self._get_number_of_tokens_in_content(ai_input)
         if tokens == -1:
@@ -55,7 +69,7 @@ class GoogleGemini(AiAssistent):
             }
             vertexai.init(project="freshbooks-builds", location="us-central1")
             model = GenerativeModel(
-                "gemini-1.5-flash-preview-0514", system_instruction=instructions
+                "gemini-1.5-pro-preview-0514", system_instruction=instructions
             )
             response: GenerationResponse = model.generate_content(
                 contents=ai_input,

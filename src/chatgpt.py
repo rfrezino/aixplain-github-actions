@@ -17,11 +17,13 @@ class ChatGPT(AiAssistent):
         openai_token: str,
         ignore_files_with_content: List[str],
         ignore_files_in_paths: List[str],
+        instructions: List[str],
     ):
         super().__init__(
             github_pr=github_pr,
             ignore_files_with_content=ignore_files_with_content,
             ignore_files_in_paths=ignore_files_in_paths,
+            instructions=instructions,
         )
         openai.api_key = openai_token
 
