@@ -170,12 +170,16 @@ parameters:
 
     def _should_file_be_ignored_due_to_content(self, file: LatestFile) -> bool:
         if self._ignore_files_with_content:
-            for ignore_content in self._ignore_files_with_content:
-                if ignore_content in file.get_file_content(self._github_pr):
-                    print(
-                        f"{file.file.filename}: File content contains {ignore_content}, skipping it. Filter: {self._ignore_files_with_content}"
-                    )
-                    return True
+            try:
+                for ignore_content in self._ignore_files_with_content:
+                    if ignore_content in file.get_file_content(self._github_pr):
+                        print(
+                            f"{file.file.filename}: File content contains {ignore_content}, skipping it. Filter: {self._ignore_files_with_content}"
+                        )
+                        return True
+            except Exception as e:
+                print(f"Error while getting content for file: {e}")
+                return True
         return False
 
     def execute(self):
