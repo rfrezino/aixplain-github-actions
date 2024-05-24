@@ -5,6 +5,7 @@ from github.Commit import Commit
 from github.File import File
 from github.IssueComment import IssueComment
 
+
 class GithubPR:
     _repository_name: str
     _pr_number: int
