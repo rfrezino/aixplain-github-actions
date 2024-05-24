@@ -32,7 +32,7 @@ class FileInstructions:
 class AiAssistent(ABC):
     SUMMARY_COMMENT_HEADER = "### AIxplain Summary"
     COMMENT_HEADER = "### AIxplain Comment"
-    HIDE_FILE_LINE_START = "<!--FILE:"""
+    HIDE_FILE_LINE_START = "<!--FILE:"
     HIDE_FILE_LINE_END = "-->"
     SHA_HEADER = "<!--#### SHA:"
     SHA_HEADER_ENDING = "-->"
@@ -57,6 +57,9 @@ class AiAssistent(ABC):
         self._ignore_files_in_paths = ignore_files_in_paths
         self._instructions = instructions
         self._file_instructions = self._generate_file_instructions()
+
+    def _get_header(self) -> str:
+        return f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
 
     def _generate_file_instructions(self) -> List[FileInstructions]:
         header = f"""You are a senior Python developer reviewing a pull request. Follow these guidelines:
@@ -216,7 +219,9 @@ parameters:
         )
         print("Generating new comments")
         files_to_comment = self._get_files_to_comment(all_files, remaining_comments)
-        files_to_comment = self._filter_files_to_comment(files_to_comment, all_bot_comments)
+        files_to_comment = self._filter_files_to_comment(
+            files_to_comment, all_bot_comments
+        )
 
         if not files_to_comment:
             print("No files to comment, exiting")
@@ -225,7 +230,9 @@ parameters:
         comments = self._generate_comments(files_to_comment)
         comments = self._filter_comments(comments)
 
-        summary_comment = self._generate_summary_comment(all_files, comments, remaining_comments)
+        summary_comment = self._generate_summary_comment(
+            all_files, comments, remaining_comments
+        )
         comments.append(summary_comment)
 
         print("Deleting deprecated comments")
@@ -236,10 +243,22 @@ parameters:
 
     def _filter_comments(self, comments: List[str]) -> List[str]:
         # if SKIP_COMMENT_TOKEN is in the comment, remove it
-        return [comment for comment in comments if self.SKIP_COMMENT_TOKEN.upper() not in comment.upper()]
+        return [
+            comment
+            for comment in comments
+            if self.SKIP_COMMENT_TOKEN.upper() not in comment.upper()
+        ]
 
-    def _generate_summary_comment(self, files_to_comment: List[LatestFile], comments: List[str], remaining_comments: List[IssueComment]) -> str:
-        hidden_files_section = [f"{self.HIDE_FILE_LINE_START}{file.file.filename}|{file.file.sha}{self.HIDE_FILE_LINE_END}\n" for file in files_to_comment]
+    def _generate_summary_comment(
+        self,
+        files_to_comment: List[LatestFile],
+        comments: List[str],
+        remaining_comments: List[IssueComment],
+    ) -> str:
+        hidden_files_section = [
+            f"{self.HIDE_FILE_LINE_START}{file.file.filename}|{file.file.sha}{self.HIDE_FILE_LINE_END}\n"
+            for file in files_to_comment
+        ]
         summary = f"""{self.SUMMARY_COMMENT_HEADER}
   
   - {len(files_to_comment)} files were reviewed.
@@ -289,7 +308,9 @@ parameters:
 
         return result
 
-    def _filter_files_to_comment(self, files: List[LatestFile], all_bot_comments: List[IssueComment]) -> List[LatestFile]:
+    def _filter_files_to_comment(
+        self, files: List[LatestFile], all_bot_comments: List[IssueComment]
+    ) -> List[LatestFile]:
         all_files_in_previous_run: List[Tuple[str, str]] = []
         for comment in all_bot_comments:
             if self.SUMMARY_COMMENT_HEADER not in comment.body:
@@ -298,7 +319,9 @@ parameters:
             lines = comment.body.splitlines()
             for line in lines:
                 if self.HIDE_FILE_LINE_START in line:
-                    line = line.replace(self.HIDE_FILE_LINE_START, "").replace(self.HIDE_FILE_LINE_END, "")
+                    line = line.replace(self.HIDE_FILE_LINE_START, "").replace(
+                        self.HIDE_FILE_LINE_END, ""
+                    )
                     file_name, file_sha = line.split("|")
                     all_files_in_previous_run.append((file_name.strip(), file_sha))
 
@@ -307,7 +330,9 @@ parameters:
                 print(f"File {file.file.filename} is already commented, ignoring it")
                 files.remove(file)
             else:
-                print(f"File {file.file.filename} is not commented, adding it to the list")
+                print(
+                    f"File {file.file.filename} is not commented, adding it to the list"
+                )
 
         return files
 

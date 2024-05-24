@@ -1,4 +1,3 @@
-import fnmatch
 from typing import List
 
 import openai
@@ -28,7 +27,7 @@ class ChatGPT(AiAssistent):
         openai.api_key = openai_token
 
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
-        header = f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
+        header = self._get_header()
         file = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         commit = latest_file.commit
