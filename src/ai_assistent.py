@@ -58,6 +58,9 @@ class AiAssistent(ABC):
         self._instructions = instructions
         self._file_instructions = self._generate_file_instructions()
 
+    def _get_header(self) -> str:
+        return f"{self.COMMENT_HEADER}\n#### File: _{{file}}_\n{self.SHA_HEADER} {{sha}} {self.SHA_HEADER_ENDING}\n----\n{{response}}"
+
     def _generate_file_instructions(self) -> List[FileInstructions]:
         header = f"""You are a senior Python developer reviewing a pull request. Follow these guidelines:
 
