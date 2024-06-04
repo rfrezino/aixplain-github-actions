@@ -447,7 +447,12 @@ parameters:
                 "{file_name}", file.file.filename
             )
 
-            comment = self._generate_comment(file, instructions_text)
+            try:
+                comment = self._generate_comment(file, instructions_text)
+            except Exception as e:
+                print(f"Error while generating comment for file {file.file.filename}: {e}")
+                comment = ""
+
             if comment != "":
                 comment = self._sanitize_comment(comment)
                 comments.append(comment)
