@@ -39,7 +39,7 @@ class GoogleGemini(AiAssistent):
 {ai_input}
 ```
 
-These are the changes, based on git diff:
+These are the changes, based on unified diff:
 ```
 {changes}
 ```
