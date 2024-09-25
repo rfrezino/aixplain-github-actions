@@ -1,6 +1,7 @@
 from typing import List
 
 import vertexai
+from github.File import File
 from vertexai.generative_models import GenerativeModel, GenerationResponse
 import vertexai.preview.generative_models as generative_models
 
@@ -29,20 +30,24 @@ class GoogleGemini(AiAssistent):
 
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
         header = self._get_header()
-        file = latest_file.file
+        file: File = latest_file.file
         print(f"Generating comment for file: {file.filename}")
         ai_input = latest_file.get_file_content(self._github_pr)
 
-        changes = file.patch
         ai_input = f"""This is the whole file:
 ```
 {ai_input}
 ```
 
-These are the changes, based on unified diff:
+There were the lines removed:
 ```
-{changes}
+{file.deletions}
 ```
+
+There were the lines added:
+```
+{file.additions}
+``` 
 """
 
         tokens = self._get_number_of_tokens_in_content(ai_input)
