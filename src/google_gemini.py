@@ -69,7 +69,7 @@ These are the changes, based on unified diff:
             }
             vertexai.init(project="freshbooks-builds", location="us-central1")
             model = GenerativeModel(
-                "gemini-1.5-pro-preview-0514", system_instruction=instructions
+                "gemini-1.5-pro-002", system_instruction=instructions
             )
             response: GenerationResponse = model.generate_content(
                 contents=ai_input,
