@@ -22,7 +22,6 @@ class LatestFile:
             self._content = gr_pr.get_content_for_file(self.file, self.commit)
         return self._content
 
-
 @dataclass
 class FileInstructions:
     file_match: str
@@ -450,7 +449,9 @@ parameters:
             try:
                 comment = self._generate_comment(file, instructions_text)
             except Exception as e:
-                print(f"Error while generating comment for file {file.file.filename}: {e}")
+                print(
+                    f"Error while generating comment for file {file.file.filename}: {e}"
+                )
                 comment = ""
 
             if comment != "":

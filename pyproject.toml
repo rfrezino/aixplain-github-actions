@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Use ChatGPT to help in PR checks"
 authors = ["Rodrigo Farias Rezino <rodrigofrezino@gmail.com>"]
 readme = "README.md"
-packages = [{include = "aixplain_github_actions"}]
+packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -12,7 +12,7 @@ pygithub = "^1.57"
 pytest = "^7.2.1"
 python-dotenv = "^0.21.1"
 openai = "^0.27.1"
-vertexai = "^1.49.0"
+google-genai = "^1.2.0"
 
 
 [build-system]

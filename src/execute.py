@@ -18,6 +18,8 @@ def execute(
     ignore_files_with_content: str,
     ignore_files_in_path: str,
     instructions: str,
+    google_project_name: str = "",
+    google_model_name: str = "",
 ):
     if openai_token is None and google_gemini_token is None:
         raise ValueError("You need to provide at least one AI Token")
@@ -53,6 +55,8 @@ def execute(
             ignore_files_with_content=ignore_files_with_content_list,
             ignore_files_in_paths=ignore_files_in_path_list,
             instructions=instructions_list,
+            google_project_name=google_project_name,
+            model_name=google_model_name,
         )
 
         google_gemini.execute()
