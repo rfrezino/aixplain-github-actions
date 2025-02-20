@@ -26,10 +26,10 @@ parser.add_argument(
     help="Instructions for the model. List of instructions separated by ';'. Example: 'python code;generate comment'",
     default="",
 )
-args = parser.parse_args()
-
 parser.add_argument("--google_ai_model", help="AI model to use", default="gemini-2.0-flash-001")
 parser.add_argument("--google_project_name", help="Google Project Name", default="")
+
+args = parser.parse_args()
 
 execute(
     github_repository=os.getenv("GITHUB_REPOSITORY"),
