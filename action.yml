@@ -29,6 +29,14 @@ inputs:
     description: 'Instructions'
     required: false
     default: ''
+  google_ai_model:
+    description: 'Google AI Model'
+    required: false
+    default: 'gemini-2.0-flash-001'
+  google_project_name:
+    description: 'Google Project Name'
+    required: false
+    default: ''
 
 runs:
   using: 'docker'
@@ -40,3 +48,6 @@ runs:
     - ${{ inputs.google_gemini_token }}
     - ${{ inputs.ignore_files_with_content }}
     - ${{ inputs.ignore_files_in_paths }}
+    - ${{ inputs.instructions }}
+    - ${{ inputs.google_ai_model }}
+    - ${{ inputs.google_project_name }}

@@ -28,6 +28,9 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
+parser.add_argument("--google_ai_model", help="AI model to use", default="gemini-2.0-flash-001")
+parser.add_argument("--google_project_name", help="Google Project Name", default="")
+
 execute(
     github_repository=os.getenv("GITHUB_REPOSITORY"),
     github_token=args.github_token,
@@ -37,4 +40,6 @@ execute(
     ignore_files_with_content=args.ignore_files_with_content,
     ignore_files_in_path=args.ignore_files_in_paths,
     instructions=args.instructions,
+    google_project_name=args.google_project_name,
+    google_model_name=args.google_ai_model,
 )

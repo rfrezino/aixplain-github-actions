@@ -1,9 +1,10 @@
 from typing import List
 
-import vertexai
 from github.File import File
-from vertexai.generative_models import GenerativeModel, GenerationResponse
-import vertexai.preview.generative_models as generative_models
+from google import genai
+from google.genai import types
+
+from google.genai.types import GenerateContentResponse
 
 from ai_assistent import AiAssistent, LatestFile
 from github_pr import GithubPR
@@ -11,6 +12,10 @@ from github_pr import GithubPR
 
 class GoogleGemini(AiAssistent):
     MAX_TOKENS = 10000
+    _google_gemini_token: str
+    _google_project_name: str
+    _model_name: str
+    _google_project_location: str
 
     def __init__(
         self,
@@ -19,6 +24,9 @@ class GoogleGemini(AiAssistent):
         ignore_files_in_paths: List[str],
         google_gemini_token: str,
         instructions: List[str],
+        google_project_name="",
+        model_name="gemini-2.0-flash-001",
+        google_project_location="us-central1",
     ):
         super().__init__(
             github_pr=github_pr,
@@ -27,6 +35,16 @@ class GoogleGemini(AiAssistent):
             instructions=instructions,
         )
         self._google_gemini_token = google_gemini_token
+        self._google_project_name = google_project_name
+        self._model_name = model_name
+        self._google_project_location = google_project_location
+
+    def get_client(self) -> genai.Client:
+        return genai.Client(
+            vertexai=True,
+            project=self._google_project_name,
+            location=self._google_project_location,
+        )
 
     def _generate_comment(self, latest_file: LatestFile, instructions: str) -> str:
         header = self._get_header()
@@ -34,20 +52,21 @@ class GoogleGemini(AiAssistent):
         print(f"Generating comment for file: {file.filename}")
         ai_input = latest_file.get_file_content(self._github_pr)
 
-        ai_input = f"""This is the whole file:
+        ai_input = f"""
+You are a code reviewer, and you are reviewing a PR that was published in GitHub by one of your colleagues. 
+
+This is the modified file that you need to review:
 ```
 {ai_input}
 ```
 
-There were the lines removed:
+This is the patch from what changed from the git file in main:
 ```
-{file.deletions}
+{file.patch}
 ```
 
-There were the lines added:
-```
-{file.additions}
-``` 
+Based on this: 
+{instructions}
 """
 
         tokens = self._get_number_of_tokens_in_content(ai_input)
@@ -60,27 +79,33 @@ There were the lines added:
             )
 
         try:
-            generation_config = {
-                "max_output_tokens": 8192,
-                "temperature": 1,
-                "top_p": 0.95,
-            }
-
-            safety_settings = {
-                generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-                generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-                generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-                generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: generative_models.HarmBlockThreshold.BLOCK_ONLY_HIGH,
-            }
-            vertexai.init(project="freshbooks-builds", location="us-central1")
-            model = GenerativeModel(
-                "gemini-1.5-pro-002", system_instruction=instructions
+            generate_content_config = types.GenerateContentConfig(
+                temperature=1,
+                top_p=0.95,
+                max_output_tokens=8192,
+                response_modalities=["TEXT"],
+                safety_settings=[
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HATE_SPEECH", threshold="OFF"
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_DANGEROUS_CONTENT", threshold="OFF"
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold="OFF"
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HARASSMENT", threshold="OFF"
+                    ),
+                ],
             )
-            response: GenerationResponse = model.generate_content(
-                contents=ai_input,
-                generation_config=generation_config,
-                safety_settings=safety_settings,
-                stream=False,
+
+            response: GenerateContentResponse = (
+                self.get_client().models.generate_content(
+                    model=self._model_name,
+                    contents=ai_input,
+                    config=generate_content_config,
+                )
             )
 
         except Exception as e:
