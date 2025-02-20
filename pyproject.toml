@@ -6,6 +6,7 @@ authors = ["Rodrigo Farias Rezino <rodrigofrezino@gmail.com>"]
 readme = "README.md"
 packages = [{include = "src"}]
 
+# you also need to update requirements.txt, because Github actions does not support poetry
 [tool.poetry.dependencies]
 python = "^3.11"
 pygithub = "^1.57"
